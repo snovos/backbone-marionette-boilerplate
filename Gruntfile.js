@@ -177,13 +177,11 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.registerTask('init:dev', ['clean', 'bower', 'browserify:vendor']);
+    grunt.registerTask('init:dev', ['clean', 'browserify:vendor']);
 
     grunt.registerTask('build:dev', ['clean:dev', 'browserify:vendor', 'browserify:app', 'jshint', 'less:transpile', 'copy:dev']);
 
     grunt.registerTask('build:prod', ['clean:prod', 'browserify:vendor', 'browserify:app', 'jshint', 'less:transpile', 'concat', 'cssmin', 'uglify']);
-
-    grunt.registerTask('heroku', ['init:dev', 'build:dev']);
 
     grunt.registerTask('server', ['build:dev', 'concurrent:dev']);
 
