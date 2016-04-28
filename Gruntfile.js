@@ -6,15 +6,6 @@ module.exports = function(grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
 
-        bower: {
-            install: {
-                options: {
-                    targetDir: 'client/requires',
-                    layout: 'byComponent'
-                }
-            }
-        },
-
         clean: {
             build: ['build'],
             dev: {
@@ -25,32 +16,38 @@ module.exports = function(grunt) {
 
         browserify: {
             vendor: {
-                src: ['client/requires/**/*.js'],
+                src: ['app/requires/*.js'],
                 dest: 'build/vendor.js',
                 options: {
                     shim: {
                         jquery: {
-                            path: 'client/requires/jquery/js/jquery.js',
+                            path: './app/requires/jquery.js',
                             exports: '$'
                         },
                         underscore: {
-                            path: 'client/requires/underscore/js/underscore.js',
+                            path: './app/requires/underscore.js',
                             exports: '_'
                         },
                         backbone: {
-                            path: 'client/requires/backbone/js/backbone.js',
+                            path: './app/requires/backbone.js',
                             exports: 'Backbone',
                             depends: {
+                                jquery: 'jquery',
                                 underscore: 'underscore'
                             }
                         },
                         'backbone.marionette': {
-                            path: 'client/requires/backbone.marionette/js/backbone.marionette.js',
+                            path: './app/requires/backbone.marionette.js',
                             exports: 'Marionette',
                             depends: {
-                                jquery: '$',
-                                backbone: 'Backbone',
-                                underscore: '_'
+                                backbone: 'Backbone'
+                            }
+                        },
+                        'backbone.stickit': {
+                            path: './app/requires/backbone.stickit.js',
+                            exports: 'Stickit',
+                            depends: {
+                                backbone: 'Backbone'
                             }
                         }
                     }
@@ -58,22 +55,10 @@ module.exports = function(grunt) {
             },
             app: {
                 files: {
-                    'build/app.js': ['client/src/main.js']
+                    'build/app.js': ['app/src/main.js']
                 },
                 options: {
-                    transform: ['hbsfy'],
-                    external: ['jquery', 'underscore', 'backbone', 'backbone.marionette']
-                }
-            },
-            test: {
-                files: {
-                    'build/tests.js': [
-                        'client/spec/**/*.test.js'
-                    ]
-                },
-                options: {
-                    transform: ['hbsfy'],
-                    external: ['jquery', 'underscore', 'backbone', 'backbone.marionette']
+                    external: ['jquery', 'underscore', 'backbone', 'backbone.marionette', 'handlebars.runtime']
                 }
             }
         },
@@ -81,10 +66,9 @@ module.exports = function(grunt) {
         less: {
             transpile: {
                 files: {
-                    'build/<%= pkg.name %>.css': [
-                        'client/styles/reset.css',
-                        'client/requires/*/css/*',
-                        'client/styles/less/main.less'
+                    'build/assets/css/style.css': [
+                        'app/assets/css/*.css',
+                        'app/assets/less/main.less'
                     ]
                 }
             }
@@ -92,27 +76,6 @@ module.exports = function(grunt) {
 
         concat: {
             'build/<%= pkg.name %>.js': ['build/vendor.js', 'build/app.js']
-        },
-
-        copy: {
-            dev: {
-                files: [{
-                    src: 'build/<%= pkg.name %>.js',
-                    dest: 'public/js/<%= pkg.name %>.js'
-                }, {
-                    src: 'build/<%= pkg.name %>.css',
-                    dest: 'public/css/<%= pkg.name %>.css'
-                }, {
-                    src: 'client/img/*',
-                    dest: 'public/img/'
-                }]
-            },
-            prod: {
-                files: [{
-                    src: ['client/img/*'],
-                    dest: 'dist/img/'
-                }]
-            }
         },
 
         // CSS minification.
@@ -140,20 +103,12 @@ module.exports = function(grunt) {
         // for changes to the front-end code
         watch: {
             scripts: {
-                files: ['client/templates/*.hbs', 'client/src/**/*.js'],
-                tasks: ['clean:dev', 'browserify:app', 'concat', 'copy:dev']
+                files: ['app/src/**/*.js'],
+                tasks: ['clean:dev', 'browserify:app', 'concat']
             },
             less: {
-                files: ['client/styles/**/*.less'],
-                tasks: ['less:transpile', 'copy:dev']
-            },
-            test: {
-                files: ['build/app.js', 'client/spec/**/*.test.js'],
-                tasks: ['browserify:test']
-            },
-            karma: {
-                files: ['build/tests.js'],
-                tasks: ['jshint:test', 'karma:watcher:run']
+                files: ['app/assets/**/*.less'],
+                tasks: ['less:transpile']
             }
         },
 
@@ -163,69 +118,59 @@ module.exports = function(grunt) {
                 options: {
                     file: 'server.js',
                     nodeArgs: ['--debug'],
-                    watchedFolders: ['controllers', 'app'],
+                    watchedFolders: ['controllers', 'server'],
                     env: {
-                        PORT: '3300'
+                        PORT: '8080'
                     }
-                }
-            }
-        },
-
-        // server tests
-        simplemocha: {
-            options: {
-                globals: ['expect', 'sinon'],
-                timeout: 3000,
-                ignoreLeaks: false,
-                ui: 'bdd',
-                reporter: 'spec'
-            },
-
-            server: {
-                src: ['spec/spechelper.js', 'spec/**/*.test.js']
-            }
-        },
-
-        // mongod server launcher
-        shell: {
-            mongo: {
-                command: 'mongod',
-                options: {
-                    async: true
                 }
             }
         },
 
         concurrent: {
             dev: {
-                tasks: ['nodemon:dev', 'shell:mongo', 'watch:scripts', 'watch:less', 'watch:test'],
-                options: {
-                    logConcurrentOutput: true
-                }
-            },
-            test: {
-                tasks: ['watch:karma'],
+                tasks: ['nodemon:dev', 'watch:scripts', 'watch:less'],
                 options: {
                     logConcurrentOutput: true
                 }
             }
         },
 
-        // for front-end tdd
-        karma: {
-            options: {
-                configFile: 'karma.conf.js'
+        copy: {
+            vendor: {
+                files: [{
+                    flatten: true,
+                    expand: true,
+                    src: [
+                        './node_modules/jquery/dist/jquery.js',
+                        './node_modules/underscore/underscore.js',
+                        './node_modules/backbone/backbone.js',
+                        './node_modules/backbone.marionette/lib/backbone.marionette.js',
+                        './node_modules/backbone.stickit/backbone.stickit.js'
+                    ],
+                    dest: './app/requires/'
+                }]
             },
-            watcher: {
-                background: true,
-                singleRun: false
+            dev: {
+                files: [{
+                    flatten: true,
+                    expand: true,
+                    src: './app/assets/images/*',
+                    dest: './build/assets/images/'
+                }]
             },
-            test: {
-                singleRun: true
+            prod: {
+                files: [{
+                    src: ['client/img/*'],
+                    dest: 'dist/img/'
+                }]
             }
         },
+
 
         jshint: {
+            options : {
+                jshintrc: './.jshintrc'
+            },
             all: ['Gruntfile.js', 'client/src/**/*.js', 'client/spec/**/*.js'],
             dev: ['client/src/**/*.js'],
             test: ['client/spec/**/*.js']
@@ -234,16 +179,12 @@ module.exports = function(grunt) {
 
     grunt.registerTask('init:dev', ['clean', 'bower', 'browserify:vendor']);
 
-    grunt.registerTask('build:dev', ['clean:dev', 'browserify:app', 'browserify:test', 'jshint:dev', 'less:transpile', 'concat', 'copy:dev']);
-    grunt.registerTask('build:prod', ['clean:prod', 'browserify:vendor', 'browserify:app', 'jshint:all', 'less:transpile', 'concat', 'cssmin', 'uglify', 'copy:prod']);
+    grunt.registerTask('build:dev', ['clean:dev', 'browserify:vendor', 'browserify:app', 'jshint', 'less:transpile', 'copy:dev']);
+
+    grunt.registerTask('build:prod', ['clean:prod', 'browserify:vendor', 'browserify:app', 'jshint', 'less:transpile', 'concat', 'cssmin', 'uglify']);
 
     grunt.registerTask('heroku', ['init:dev', 'build:dev']);
 
     grunt.registerTask('server', ['build:dev', 'concurrent:dev']);
-    grunt.registerTask('test:server', ['simplemocha:server']);
 
-    grunt.registerTask('test:client', ['karma:test']);
-    grunt.registerTask('tdd', ['karma:watcher:start', 'concurrent:test']);
-
-    grunt.registerTask('test', ['test:server', 'test:client']);
 };

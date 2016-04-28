@@ -1,0 +1,25 @@
+{
+  "curly": true,
+  "eqeqeq": true,
+  "immed": true,
+  "latedef": true,
+  "newcap": true,
+  "noarg": true,
+  "sub": true,
+  "undef": true,
+  "boss": true,
+  "eqnull": true,
+  "node": true,
+  "browser": true,
+  "expr": true,
+  "quotmark": "single",
+  "globals": {
+    "jQuery": true,
+    "$": true,
+    "CustomEvent" : true,
+    "Backbone": true,
+    "_": true,
+    "define": true,
+    "require": true
+  }
+}

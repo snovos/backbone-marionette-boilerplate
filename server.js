@@ -1,27 +1,28 @@
 var express = require('express'),
     http = require('http'),
     path = require('path'),
-    routes = require('./app/routes'),
-    exphbs = require('express3-handlebars'),
     mongoose = require('mongoose'),
-    seeder = require('./app/seeder'),
+    routes = require('./server/routes'),
     app = express();
 
-app.set('port', process.env.PORT || 3300);
-app.set('views', __dirname + '/views');
-app.engine('handlebars', exphbs({
-    defaultLayout: 'main',
-    layoutsDir: app.get('views') + '/layouts'
-}));
-app.set('view engine', 'handlebars');
+app.set('port', process.env.PORT || 8080);
+app.set('views', __dirname + './');
+app.use('/', express.static(path.join(__dirname, './')));
+
 
 app.use(express.logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
 app.use(express.cookieParser('some-secret-value-here'));
+
 app.use(app.router);
-app.use('/', express.static(path.join(__dirname, 'public')));
+
+
+app.get(function (req, res, next) {
+    if (req.accepts('html')) res.sendfile('/index.html')
+    else next()
+});
 
 // development only
 if ('development' == app.get('env')) {
@@ -29,13 +30,11 @@ if ('development' == app.get('env')) {
 }
 
 //connect to the db server:
-mongoose.connect('mongodb://localhost/MyApp');
+mongoose.connect('localhost/boilerplate');
 mongoose.connection.on('open', function() {
-    console.log("Connected to Mongoose...");
-
-    // check if the db is empty, if so seed it with some contacts:
-    seeder.check();
+    console.log("Connected to DB...");
 });
+
 
 //routes list:
 routes.initialize(app);

@@ -1,0 +1,61 @@
+@import "variables.less";
+
+body {
+  font-family: Raleway,"Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  color: white;
+  background: @blueBg;
+}
+
+.help-block {
+  color: @redBg;
+}
+.error {
+  label {
+    color: @redBg;
+  }
+  input {
+    border: 1px solid @redBg;
+  }
+}
+tbody {
+  td {
+    color: #000;
+  }
+}
+.btn {
+  border: 2px solid;
+  border-color: white;
+  border-radius: 25px;
+  color: white;
+  padding: 14px 28px;
+  text-transform: uppercase;
+  background:none;
+  &.btn-white {
+    &:hover {
+      color: #333;
+      background:#fff;
+    }
+  }
+}
+
+.login_page {
+  padding: 15% 0;
+  form {
+    width: 350px;
+    margin: 0 auto;
+    .btn-set {
+      text-align: center;
+      overflow: hidden;
+    }
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+.register_page {
+  padding-top: 10%;
+  .btn-set {
+    text-align: center;
+  }
+}

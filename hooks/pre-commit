@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run core tests and jshint before commit
+
+grunt jshint
